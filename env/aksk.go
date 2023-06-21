@@ -23,14 +23,14 @@ type EnvAKSKProvider struct {
 	AkskMap   sync.Map
 }
 
-func NewEnvAKSKProvider(encrypt bool, cipherKey string) (*EnvAKSKProvider, error) {
+func NewEnvAKSKProvider(encrypt bool, cipherKey string) *EnvAKSKProvider {
 	provider := &EnvAKSKProvider{
 		Encrypt:   encrypt,
 		CipherKey: cipherKey,
 		AkskMap:   sync.Map{},
 	}
 
-	return provider, nil
+	return provider
 }
 
 func (pvd *EnvAKSKProvider) GetAKSK() (*types.AKSK, error) {
@@ -55,7 +55,7 @@ func (pvd *EnvAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
 		return nil, fmt.Errorf("get sk from env %s failed: nil", defaultSkEnv)
 	}
 
-	var aksk *types.AKSK
+	aksk := &types.AKSK{}
 	aksk.AK = os.Getenv(defaultAkEnv)
 	aksk.SK = os.Getenv(defaultSkEnv)
 	aksk.SecurityToken = os.Getenv(defaultSecurityTokenEnv)

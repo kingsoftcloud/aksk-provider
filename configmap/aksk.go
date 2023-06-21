@@ -1,9 +1,7 @@
 package configmap
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 
 	"newgit.op.ksyun.com/kce/aksk-provider/types"
@@ -19,7 +17,7 @@ type CMAKSKProvider struct {
 	AkskMap  sync.Map
 }
 
-func NewCMAKSKProvider(filePath string) (*CMAKSKProvider, error) {
+func NewCMAKSKProvider(filePath string) *CMAKSKProvider {
 	if filePath == "" {
 		filePath = defaultAkskFilePath
 	}
@@ -28,7 +26,7 @@ func NewCMAKSKProvider(filePath string) (*CMAKSKProvider, error) {
 		AkskMap:  sync.Map{},
 	}
 
-	return provider, nil
+	return provider
 }
 
 func (pvd *CMAKSKProvider) GetAKSK() (*types.AKSK, error) {
@@ -45,18 +43,13 @@ func (pvd *CMAKSKProvider) GetAKSK() (*types.AKSK, error) {
 }
 
 func (pvd *CMAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
-	content, err := os.ReadFile(pvd.FilePath)
+	aksk, err := utils.ParseAkskFile(pvd.FilePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file %s: %v", pvd.FilePath, err)
-	}
-
-	var aksk types.AKSK
-	if err = json.Unmarshal([]byte(content), &aksk); err != nil {
-		return nil, fmt.Errorf("json unmarshal file %s error: %v", pvd.FilePath, err)
+		return nil, err
 	}
 
 	pvd.AkskMap.Delete("aksk")
-	pvd.AkskMap.Store("aksk", &aksk)
+	pvd.AkskMap.Store("aksk", aksk)
 
-	return &aksk, nil
+	return aksk, nil
 }

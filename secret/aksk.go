@@ -1,9 +1,7 @@
 package secret
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 
 	"newgit.op.ksyun.com/kce/aksk-provider/types"
@@ -20,7 +18,7 @@ type SecretAKSKProvider struct {
 	AkskMap   sync.Map
 }
 
-func NewSecretAKSKProvider(filePath, cipherKey string) (*SecretAKSKProvider, error) {
+func NewSecretAKSKProvider(filePath, cipherKey string) *SecretAKSKProvider {
 	if filePath == "" {
 		filePath = defaultAkskFilePath
 	}
@@ -30,7 +28,7 @@ func NewSecretAKSKProvider(filePath, cipherKey string) (*SecretAKSKProvider, err
 		AkskMap:   sync.Map{},
 	}
 
-	return provider, nil
+	return provider
 }
 
 func (pvd *SecretAKSKProvider) GetAKSK() (*types.AKSK, error) {
@@ -47,14 +45,9 @@ func (pvd *SecretAKSKProvider) GetAKSK() (*types.AKSK, error) {
 }
 
 func (pvd *SecretAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
-	content, err := os.ReadFile(pvd.FilePath)
+	aksk, err := utils.ParseAkskFile(pvd.FilePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file %s: %v", pvd.FilePath, err)
-	}
-
-	var aksk *types.AKSK
-	if err = json.Unmarshal([]byte(content), &aksk); err != nil {
-		return nil, fmt.Errorf("json unmarshal file %s error: %v", pvd.FilePath, err)
+		return nil, err
 	}
 
 	if aksk.Cipher == "none" {

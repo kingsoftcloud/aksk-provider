@@ -4,10 +4,17 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
+	"io/ioutil"
+	"os"
+	"strings"
 	"time"
+
+	"newgit.op.ksyun.com/kce/aksk-provider/types"
 )
 
-const ()
+const (
+	timeLayoutStr = "2006-01-02T15:04:05"
+)
 
 func AesDecrypt(cryted string, key string) string {
 	// 转成字节数组
@@ -41,4 +48,49 @@ func IsExpired(expiredAt time.Time) bool {
 	}
 
 	return false
+}
+
+func ParseAkskFile(filePath string) (*types.AKSK, error) {
+	fd, err := os.OpenFile(filePath, os.O_RDONLY, 0666)
+	if err != nil {
+		return nil, err
+	}
+	defer fd.Close()
+
+	bytes, err := ioutil.ReadAll(fd)
+	if err != nil {
+		return nil, err
+	}
+
+	akskMap := make(map[string]string)
+	lines := strings.Split(string(bytes), "\n")
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		array := strings.SplitN(line, ":", 2)
+		key := strings.Trim(array[0], "\" ")
+		value := strings.Trim(array[1], "\" ")
+		akskMap[key] = value
+	}
+
+	aksk := &types.AKSK{
+		AK:     akskMap["ak"],
+		SK:     akskMap["sk"],
+		Cipher: akskMap["cipher"],
+	}
+
+	if _, ok := akskMap["expired_at"]; ok {
+		ts, err := time.Parse(timeLayoutStr, akskMap["expired_at"])
+		if err != nil {
+			return nil, err
+		}
+		aksk.ExpiredAt = ts
+	}
+
+	if _, ok := akskMap["securityToken"]; ok {
+		aksk.SecurityToken = akskMap["securityToken"]
+	}
+
+	return aksk, nil
 }
