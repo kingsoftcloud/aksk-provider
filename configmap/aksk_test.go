@@ -11,7 +11,7 @@ const (
 )
 
 func TestCMProvider(t *testing.T) {
-	provider := NewCMAKSKProvider("./aksk_file")
+	provider := NewCMAKSKProvider("./aksk")
 	aksk, err := provider.GetAKSK()
 	if err != nil {
 		t.Errorf("get aksk failed: %v", err)

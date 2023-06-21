@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -13,7 +14,8 @@ import (
 )
 
 const (
-	timeLayoutStr = "2006-01-02T15:04:05"
+	timeLayoutStr    = "2006-01-02T15:04:05"
+	DefaultExpiredAt = 100 * 365 * 24 * time.Hour
 )
 
 func AesDecrypt(cryted string, key string) string {
@@ -48,6 +50,57 @@ func IsExpired(expiredAt time.Time) bool {
 	}
 
 	return false
+}
+
+func ParseAkskDirectory(directory string) (*types.AKSK, error) {
+	aksk := &types.AKSK{}
+
+	akFile, err := os.ReadFile(directory + "/ak")
+	if err != nil {
+		return nil, fmt.Errorf("read file %s error: %v", directory+"/ak", err)
+	}
+	aksk.AK = strings.TrimSpace(string(akFile))
+
+	skFile, err := os.ReadFile(directory + "/sk")
+	if err != nil {
+		return nil, fmt.Errorf("read file %s error: %v", directory+"/ak", err)
+	}
+	aksk.SK = strings.TrimSpace(string(skFile))
+
+	_, err = os.Stat(directory + "/securityToken")
+	if err == nil {
+		tokenFile, err := os.ReadFile(directory + "/securityToken")
+		if err != nil {
+			return nil, fmt.Errorf("read file %s error: %v", directory+"/securityToken", err)
+		}
+		aksk.SecurityToken = strings.TrimSpace(string(tokenFile))
+	}
+
+	_, err = os.Stat(directory + "/expired_at")
+	if err == nil {
+		tsFile, err := os.ReadFile(directory + "/expired_at")
+		if err != nil {
+			return nil, fmt.Errorf("read file %s error: %v", directory+"/", err)
+		}
+		ts, err := time.Parse(timeLayoutStr, strings.TrimSpace(string(tsFile)))
+		if err != nil {
+			return nil, err
+		}
+		aksk.ExpiredAt = ts
+	} else {
+		aksk.ExpiredAt = time.Now().Add(DefaultExpiredAt)
+	}
+
+	_, err = os.Stat(directory + "/cipher")
+	if err == nil {
+		cipherFile, err := os.ReadFile(directory + "/cipher")
+		if err != nil {
+			return nil, fmt.Errorf("read file %s error: %v", directory+"/cipher", err)
+		}
+		aksk.Cipher = strings.TrimSpace(string(cipherFile))
+	}
+
+	return aksk, nil
 }
 
 func ParseAkskFile(filePath string) (*types.AKSK, error) {

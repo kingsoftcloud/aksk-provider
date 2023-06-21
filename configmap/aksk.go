@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"sync"
 
+	prvd "newgit.op.ksyun.com/kce/aksk-provider"
 	"newgit.op.ksyun.com/kce/aksk-provider/types"
 	"newgit.op.ksyun.com/kce/aksk-provider/utils"
 )
 
 const (
-	defaultAkskFilePath = "/var/lib/aksk"
+	defaultAkskFilePath = "/etc/aksk"
 )
+
+var _ prvd.AKSKProvider = &CMAKSKProvider{}
 
 type CMAKSKProvider struct {
 	FilePath string
@@ -43,7 +46,7 @@ func (pvd *CMAKSKProvider) GetAKSK() (*types.AKSK, error) {
 }
 
 func (pvd *CMAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
-	aksk, err := utils.ParseAkskFile(pvd.FilePath)
+	aksk, err := utils.ParseAkskDirectory(pvd.FilePath)
 	if err != nil {
 		return nil, err
 	}

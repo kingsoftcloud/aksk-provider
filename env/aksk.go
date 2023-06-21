@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	prvd "newgit.op.ksyun.com/kce/aksk-provider"
 	"newgit.op.ksyun.com/kce/aksk-provider/types"
 	"newgit.op.ksyun.com/kce/aksk-provider/utils"
 )
@@ -14,8 +15,9 @@ const (
 	defaultAkEnv            = "AK"
 	defaultSkEnv            = "SK"
 	defaultSecurityTokenEnv = "SECURITY_TOKEN"
-	defaultExpiredAt        = 100 * 365 * 24 * time.Hour
 )
+
+var _ prvd.AKSKProvider = &EnvAKSKProvider{}
 
 type EnvAKSKProvider struct {
 	Encrypt   bool
@@ -66,7 +68,7 @@ func (pvd *EnvAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
 		}
 	}
 
-	aksk.ExpiredAt = time.Now().Add(defaultExpiredAt)
+	aksk.ExpiredAt = time.Now().Add(utils.DefaultExpiredAt)
 
 	pvd.AkskMap.Delete("aksk")
 	pvd.AkskMap.Store("aksk", &aksk)

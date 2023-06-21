@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	prvd "newgit.op.ksyun.com/kce/aksk-provider"
 	"newgit.op.ksyun.com/kce/aksk-provider/types"
 	"newgit.op.ksyun.com/kce/aksk-provider/utils"
 )
@@ -12,23 +13,24 @@ const (
 	defaultAkskFilePath = "/var/lib/aksk"
 )
 
+var _ prvd.AKSKProvider = &SecretAKSKProvider{}
+
 type SecretAKSKProvider struct {
 	FilePath  string
 	CipherKey string
 	AkskMap   sync.Map
 }
 
-func NewSecretAKSKProvider(filePath, cipherKey string) *SecretAKSKProvider {
+func NewSecretAKSKProvider(filePath, cipherKey string) prvd.AKSKProvider {
 	if filePath == "" {
 		filePath = defaultAkskFilePath
 	}
-	provider := &SecretAKSKProvider{
+
+	return &SecretAKSKProvider{
 		FilePath:  filePath,
 		CipherKey: cipherKey,
 		AkskMap:   sync.Map{},
 	}
-
-	return provider
 }
 
 func (pvd *SecretAKSKProvider) GetAKSK() (*types.AKSK, error) {
@@ -45,7 +47,7 @@ func (pvd *SecretAKSKProvider) GetAKSK() (*types.AKSK, error) {
 }
 
 func (pvd *SecretAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
-	aksk, err := utils.ParseAkskFile(pvd.FilePath)
+	aksk, err := utils.ParseAkskDirectory(pvd.FilePath)
 	if err != nil {
 		return nil, err
 	}

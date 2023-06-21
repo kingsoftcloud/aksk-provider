@@ -12,7 +12,7 @@ const (
 )
 
 func TestSecretProvider(t *testing.T) {
-	provider := NewSecretAKSKProvider("./aksk_file", cipherKey)
+	provider := NewSecretAKSKProvider("./aksk", cipherKey)
 	aksk, err := provider.GetAKSK()
 	if err != nil {
 		t.Errorf("get aksk failed: %v", err)
