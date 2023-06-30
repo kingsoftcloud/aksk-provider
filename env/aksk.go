@@ -62,16 +62,23 @@ func (pvd *EnvAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
 	aksk.SK = os.Getenv(defaultSkEnv)
 	aksk.SecurityToken = os.Getenv(defaultSecurityTokenEnv)
 	if pvd.Encrypt {
-		aksk.SK = utils.AesDecrypt(aksk.SK, pvd.CipherKey)
+		var err error
+		aksk.SK, err = utils.AesDecrypt(aksk.SK, pvd.CipherKey)
+		if err != nil {
+			return nil, err
+		}
 		if aksk.SecurityToken != "" {
-			aksk.SecurityToken = utils.AesDecrypt(aksk.SecurityToken, pvd.CipherKey)
+			aksk.SecurityToken, err = utils.AesDecrypt(aksk.SecurityToken, pvd.CipherKey)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
 	aksk.ExpiredAt = time.Now().Add(utils.DefaultExpiredAt)
 
 	pvd.AkskMap.Delete("aksk")
-	pvd.AkskMap.Store("aksk", &aksk)
+	pvd.AkskMap.Store("aksk", aksk)
 
 	return aksk, nil
 }

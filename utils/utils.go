@@ -18,12 +18,18 @@ const (
 	DefaultExpiredAt = 100 * 365 * 24 * time.Hour
 )
 
-func AesDecrypt(cryted string, key string) string {
+func AesDecrypt(cryted string, key string) (string, error) {
 	// 转成字节数组
-	crytedByte, _ := base64.StdEncoding.DecodeString(cryted) //base解码
+	crytedByte, err := base64.StdEncoding.DecodeString(cryted) //base解码
+	if err != nil {
+		return "", fmt.Errorf("decodeString failed: %v", err)
+	}
 	k := []byte(key)
 	// 分组秘钥
-	block, _ := aes.NewCipher(k)
+	block, err := aes.NewCipher(k)
+	if err != nil {
+		return "", fmt.Errorf("create new aes cipher failed: %v", err)
+	}
 	// 获取秘钥块的长度
 	blockSize := block.BlockSize()
 	// 加密模式
@@ -34,7 +40,7 @@ func AesDecrypt(cryted string, key string) string {
 	blockMode.CryptBlocks(orig, crytedByte)
 	// 去补全码
 	orig = PKCS7UnPadding(orig)
-	return string(orig)
+	return string(orig), nil
 }
 
 //去码

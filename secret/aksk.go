@@ -56,11 +56,17 @@ func (pvd *SecretAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
 		return aksk, nil
 	}
 
-	aksk.SK = utils.AesDecrypt(aksk.SK, pvd.CipherKey)
-	aksk.SecurityToken = utils.AesDecrypt(aksk.SecurityToken, pvd.CipherKey)
+	aksk.SK, err = utils.AesDecrypt(aksk.SK, pvd.CipherKey)
+	if err != nil {
+		return nil, err
+	}
+	aksk.SecurityToken, err = utils.AesDecrypt(aksk.SecurityToken, pvd.CipherKey)
+	if err != nil {
+		return nil, err
+	}
 
 	pvd.AkskMap.Delete("aksk")
-	pvd.AkskMap.Store("aksk", &aksk)
+	pvd.AkskMap.Store("aksk", aksk)
 
 	return aksk, nil
 }
