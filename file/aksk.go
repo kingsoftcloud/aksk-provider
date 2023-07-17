@@ -1,4 +1,4 @@
-package secret
+package file
 
 import (
 	"fmt"
@@ -13,27 +13,27 @@ const (
 	defaultAkskFilePath = "/var/lib/aksk"
 )
 
-var _ prvd.AKSKProvider = &SecretAKSKProvider{}
+var _ prvd.AKSKProvider = &FileAKSKProvider{}
 
-type SecretAKSKProvider struct {
+type FileAKSKProvider struct {
 	FilePath  string
 	CipherKey string
 	AkskMap   sync.Map
 }
 
-func NewSecretAKSKProvider(filePath, cipherKey string) prvd.AKSKProvider {
+func NewFileAKSKProvider(filePath, cipherKey string) prvd.AKSKProvider {
 	if filePath == "" {
 		filePath = defaultAkskFilePath
 	}
 
-	return &SecretAKSKProvider{
+	return &FileAKSKProvider{
 		FilePath:  filePath,
 		CipherKey: cipherKey,
 		AkskMap:   sync.Map{},
 	}
 }
 
-func (pvd *SecretAKSKProvider) GetAKSK() (*types.AKSK, error) {
+func (pvd *FileAKSKProvider) GetAKSK() (*types.AKSK, error) {
 	if v, ok := pvd.AkskMap.Load("aksk"); ok && !utils.IsExpired(v.(*types.AKSK).ExpiredAt) {
 		return v.(*types.AKSK), nil
 	}
@@ -46,13 +46,13 @@ func (pvd *SecretAKSKProvider) GetAKSK() (*types.AKSK, error) {
 	return aksk, nil
 }
 
-func (pvd *SecretAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
+func (pvd *FileAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
 	aksk, err := utils.ParseAkskDirectory(pvd.FilePath)
 	if err != nil {
 		return nil, err
 	}
 
-	if aksk.Cipher == "none" {
+	if aksk.Cipher == "none" || aksk.Cipher == "" {
 		return aksk, nil
 	}
 
