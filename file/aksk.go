@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	prvd "newgit.op.ksyun.com/kce/aksk-provider"
-	"newgit.op.ksyun.com/kce/aksk-provider/types"
-	"newgit.op.ksyun.com/kce/aksk-provider/utils"
+	prvd "ezone.ksyun.com/code/kce/aksk-provider"
+	"ezone.ksyun.com/code/kce/aksk-provider/types"
+	"ezone.ksyun.com/code/kce/aksk-provider/utils"
 )
 
 const (

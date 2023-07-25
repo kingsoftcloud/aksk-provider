@@ -1,4 +1,4 @@
-module newgit.op.ksyun.com/kce/aksk-provider
+module ezone.ksyun.com/code/kce/aksk-provider
 
 go 1.19
 

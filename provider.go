@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"newgit.op.ksyun.com/kce/aksk-provider/types"
+	"ezone.ksyun.com/code/kce/aksk-provider/types"
 )
 
 type AKSKProvider interface {
