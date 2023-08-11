@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	prvd "ezone.ksyun.com/code/kce/aksk-provider"
-	"ezone.ksyun.com/code/kce/aksk-provider/types"
-	"ezone.ksyun.com/code/kce/aksk-provider/utils"
+	prvd "ezone.ksyun.com/ezone/kce/aksk-provider"
+	"ezone.ksyun.com/ezone/kce/aksk-provider/types"
+	"ezone.ksyun.com/ezone/kce/aksk-provider/utils"
 )
 
 const (
