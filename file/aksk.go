@@ -60,9 +60,12 @@ func (pvd *FileAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
 	if err != nil {
 		return nil, err
 	}
-	aksk.SecurityToken, err = utils.AesDecrypt(aksk.SecurityToken, pvd.CipherKey)
-	if err != nil {
-		return nil, err
+
+	if aksk.SecurityToken != "" {
+		aksk.SecurityToken, err = utils.AesDecrypt(aksk.SecurityToken, pvd.CipherKey)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	pvd.AkskMap.Delete("aksk")
