@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"ezone.ksyun.com/ezone/kce/aksk-provider/types"
+	"github.com/kingsoftcloud/aksk-provider/types"
 )
 
 const (

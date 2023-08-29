@@ -1,3 +1,3 @@
-module ezone.ksyun.com/ezone/kce/aksk-provider
+module github.com/kingsoftcloud/aksk-provider
 
 go 1.19

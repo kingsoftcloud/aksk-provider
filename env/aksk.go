@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	prvd "ezone.ksyun.com/ezone/kce/aksk-provider"
-	"ezone.ksyun.com/ezone/kce/aksk-provider/types"
-	"ezone.ksyun.com/ezone/kce/aksk-provider/utils"
+	prvd "github.com/kingsoftcloud/aksk-provider"
+	"github.com/kingsoftcloud/aksk-provider/types"
+	"github.com/kingsoftcloud/aksk-provider/utils"
 )
 
 const (
