@@ -14,7 +14,7 @@
    
 2. 使用方法
    
-   对于各个控制器来讲，支持两种存放aksk的方式，一种环境变量，一种是文件挂载（包括secret和configmap）。
+   对于各个控制器来讲，支持三种存放aksk的方式，一种环境变量，一种是文件挂载（包括secret和configmap）,最后一种是直接从集群内获取（包括secret或configmap）。
    
    2.1 环境变量方式
 
@@ -33,6 +33,32 @@
    AkskFilePath: 挂载路径，如果为空，则使用默认路径/var/lib/aksk
    
    DefaultCipherKey：密钥key（若非加密，此值为空字符串）
+
+   2.3 inCluster方式
+
+   2.3.1 NewInClusterAKSKProviderByKubeConfigFilePath
+   
+   AkskProvider = incluster.NewAKSKProviderByKubeConfigFilePath(akskCMName, akskCMNameSpace, akskSecretName, akskSecretNameSpace, cipherKey, kubeconfigPath)
+
+   初始化NewAKSKProviderByKubeConfigFilePath函数，需要传入的参数：
+   akskCMName：保存aksk的ConfigMap的name
+   akskCMNameSpace：保存aksk的ConfigMap的nameSpace
+   akskSecretName：保存aksk的Secret的name
+   akskSecretNameSpace：保存aksk的Secret的nameSpace
+   cipherKey：密钥key
+   kubeconfigPath：kubeconfig的文件路径
+   
+   2.3.2  NewInClusterAKSKProviderByClientset
+   
+   AkskProvider = incluster.NewAKSKProviderByClientset(akskCMName, akskCMNameSpace, akskSecretName, akskSecretNameSpace, cipherKey string, clientset)
+   
+   初始化NewAKSKProviderByClientset函数，需要传入的参数：
+   akskCMName：保存aksk的ConfigMap的name
+   akskCMNameSpace：保存aksk的ConfigMap的nameSpace
+   akskSecretName：保存aksk的Secret的name
+   akskSecretNameSpace：保存aksk的Secret的nameSpace
+   cipherKey：密钥key
+   clientset：k8s集群客户端
    
 3. 调用方式
    
