@@ -39,26 +39,27 @@
    2.3.1 NewInClusterAKSKProviderByKubeConfigFilePath
    
    AkskProvider = incluster.NewAKSKProviderByKubeConfigFilePath(akskCMName, akskCMNameSpace, akskSecretName, akskSecretNameSpace, cipherKey, kubeconfigPath)
-
-   初始化NewAKSKProviderByKubeConfigFilePath函数，需要传入的参数：
-   akskCMName：保存aksk的ConfigMap的name
-   akskCMNameSpace：保存aksk的ConfigMap的nameSpace
-   akskSecretName：保存aksk的Secret的name
-   akskSecretNameSpace：保存aksk的Secret的nameSpace
-   cipherKey：密钥key
-   kubeconfigPath：kubeconfig的文件路径
    
    2.3.2  NewInClusterAKSKProviderByClientset
    
    AkskProvider = incluster.NewAKSKProviderByClientset(akskCMName, akskCMNameSpace, akskSecretName, akskSecretNameSpace, cipherKey string, clientset)
    
-   初始化NewAKSKProviderByClientset函数，需要传入的参数：
+   初始化函数需要传入的参数：
+
    akskCMName：保存aksk的ConfigMap的name
+
    akskCMNameSpace：保存aksk的ConfigMap的nameSpace
+
    akskSecretName：保存aksk的Secret的name
+
    akskSecretNameSpace：保存aksk的Secret的nameSpace
+
    cipherKey：密钥key
+
+   kubeconfigPath：kubeconfig的文件路径
+
    clientset：k8s集群客户端
+
    
 3. 调用方式
    
