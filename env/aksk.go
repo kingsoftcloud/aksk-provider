@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	prvd "ezone.ksyun.com/ezone/kce/aksk-provider"
-	"ezone.ksyun.com/ezone/kce/aksk-provider/types"
-	"ezone.ksyun.com/ezone/kce/aksk-provider/utils"
+	prvd "github.com/kingsoftcloud/aksk-provider"
+	"github.com/kingsoftcloud/aksk-provider/types"
+	"github.com/kingsoftcloud/aksk-provider/utils"
 )
 
 const (
@@ -63,15 +63,9 @@ func (pvd *EnvAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
 	aksk.SecurityToken = os.Getenv(defaultSecurityTokenEnv)
 	if pvd.Encrypt {
 		var err error
-		aksk.SK, err = utils.AesDecrypt(aksk.SK, pvd.CipherKey)
+		aksk.SK, err = utils.DecryptData(aksk.SK, pvd.CipherKey, aksk.Cipher)
 		if err != nil {
 			return nil, err
-		}
-		if aksk.SecurityToken != "" {
-			aksk.SecurityToken, err = utils.AesDecrypt(aksk.SecurityToken, pvd.CipherKey)
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 

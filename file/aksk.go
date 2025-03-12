@@ -2,11 +2,12 @@ package file
 
 import (
 	"fmt"
+	"k8s.io/klog/v2"
 	"sync"
 
-	prvd "ezone.ksyun.com/ezone/kce/aksk-provider"
-	"ezone.ksyun.com/ezone/kce/aksk-provider/types"
-	"ezone.ksyun.com/ezone/kce/aksk-provider/utils"
+	prvd "github.com/kingsoftcloud/aksk-provider"
+	"github.com/kingsoftcloud/aksk-provider/types"
+	"github.com/kingsoftcloud/aksk-provider/utils"
 )
 
 const (
@@ -40,6 +41,7 @@ func (pvd *FileAKSKProvider) GetAKSK() (*types.AKSK, error) {
 
 	aksk, err := pvd.ReloadAKSK()
 	if err != nil {
+		klog.Errorf("reload aksk error: %v", err)
 		return nil, fmt.Errorf("reload aksk from file %s error: %v", pvd.FilePath, err)
 	}
 
@@ -56,11 +58,7 @@ func (pvd *FileAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
 		return aksk, nil
 	}
 
-	aksk.SK, err = utils.AesDecrypt(aksk.SK, pvd.CipherKey)
-	if err != nil {
-		return nil, err
-	}
-	aksk.SecurityToken, err = utils.AesDecrypt(aksk.SecurityToken, pvd.CipherKey)
+	aksk.SK, err = utils.DecryptData(aksk.SK, pvd.CipherKey, aksk.Cipher)
 	if err != nil {
 		return nil, err
 	}

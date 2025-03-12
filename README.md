@@ -22,7 +22,7 @@
    
    调用env包的NewEnvAKSKProvider函数，需要传入的参数：
    
-   Encrypt：bool类型，是否对sk和securityToken加密了；
+   Encrypt：bool类型，是否对sk加密了；
    
    DefaultCipherKey：密钥key（若Encrypt为false，此值为空字符串）
    

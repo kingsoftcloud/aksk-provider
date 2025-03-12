@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"ezone.ksyun.com/ezone/kce/aksk-provider/types"
+	"github.com/kingsoftcloud/aksk-provider/types"
 )
 
 type AKSKProvider interface {
