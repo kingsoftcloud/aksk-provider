@@ -63,15 +63,9 @@ func (pvd *EnvAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
 	aksk.SecurityToken = os.Getenv(defaultSecurityTokenEnv)
 	if pvd.Encrypt {
 		var err error
-		aksk.SK, err = utils.AesDecrypt(aksk.SK, pvd.CipherKey)
+		aksk.SK, err = utils.DecryptData(aksk.SK, pvd.CipherKey, aksk.Cipher)
 		if err != nil {
 			return nil, err
-		}
-		if aksk.SecurityToken != "" {
-			aksk.SecurityToken, err = utils.AesDecrypt(aksk.SecurityToken, pvd.CipherKey)
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 

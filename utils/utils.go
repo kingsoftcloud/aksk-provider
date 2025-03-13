@@ -1,53 +1,59 @@
 package utils
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"encoding/base64"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/kingsoftcloud/aksk-provider/types"
+	utils "github.com/kingsoftcloud/aksk-provider/utils/encryption"
 )
 
 const (
-	timeLayoutStr    = "2006-01-02T15:04:05"
+	TimeLayoutStr    = "2006-01-02T15:04:05"
 	DefaultExpiredAt = 100 * 365 * 24 * time.Hour
 )
 
-func AesDecrypt(cryted string, key string) (string, error) {
-	// 转成字节数组
-	crytedByte, err := base64.StdEncoding.DecodeString(cryted) //base解码
-	if err != nil {
-		return "", fmt.Errorf("decodeString failed: %v", err)
+func createEncryptorConfig(key string, cipher string) (*utils.EncryptorConfig, error) {
+	cipher = strings.ToUpper(cipher)
+	switch cipher {
+	case "RSA":
+		privateKey, err := utils.LoadPrivateKey(key)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load privateKey: %v", err)
+		}
+		return &utils.EncryptorConfig{
+			Cipher: cipher,
+			RSAKeys: &utils.RSAKeysConfig{
+				PrivateKey: privateKey,
+			},
+		}, nil
+	default:
+		// default cipher
+		return &utils.EncryptorConfig{
+			Cipher: "AES256",
+			AESKey: key,
+		}, nil
 	}
-	k := []byte(key)
-	// 分组秘钥
-	block, err := aes.NewCipher(k)
-	if err != nil {
-		return "", fmt.Errorf("create new aes cipher failed: %v", err)
-	}
-	// 获取秘钥块的长度
-	blockSize := block.BlockSize()
-	// 加密模式
-	blockMode := cipher.NewCBCDecrypter(block, k[:blockSize])
-	// 创建数组
-	orig := make([]byte, len(crytedByte))
-	// 解密
-	blockMode.CryptBlocks(orig, crytedByte)
-	// 去补全码
-	orig = PKCS7UnPadding(orig)
-	return string(orig), nil
 }
 
-//去码
-func PKCS7UnPadding(origData []byte) []byte {
-	length := len(origData)
-	unpadding := int(origData[length-1])
-	return origData[:(length - unpadding)]
+func DecryptData(cryted string, key string, cipher string) (string, error) {
+	encryptorConfig, err := createEncryptorConfig(key, cipher)
+	if err != nil {
+		return "", err
+	}
+
+	decryptor, err := utils.NewEncryptorWithOptions(encryptorConfig)
+	if err != nil {
+		return "", fmt.Errorf("failed to create decryptor: %v", err)
+	}
+	return decryptor.Decrypt(cryted)
 }
 
 func IsExpired(expiredAt time.Time) bool {
@@ -88,7 +94,7 @@ func ParseAkskDirectory(directory string) (*types.AKSK, error) {
 		if err != nil {
 			return nil, fmt.Errorf("read file %s error: %v", directory+"/", err)
 		}
-		ts, err := time.Parse(timeLayoutStr, strings.TrimSpace(string(tsFile)))
+		ts, err := time.Parse(TimeLayoutStr, strings.TrimSpace(string(tsFile)))
 		if err != nil {
 			return nil, err
 		}
@@ -106,6 +112,44 @@ func ParseAkskDirectory(directory string) (*types.AKSK, error) {
 		aksk.Cipher = strings.TrimSpace(string(cipherFile))
 	}
 
+	return aksk, nil
+}
+
+func GetAkskSecret(akskName, akskNameSpace string, clientset *kubernetes.Clientset) (*types.AKSK, error) {
+	secret, err := clientset.CoreV1().Secrets(akskNameSpace).Get(context.TODO(), akskName, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("get aksk secret %s error: %v", akskName, err)
+	}
+	ts, err := time.Parse(TimeLayoutStr, strings.TrimSpace(string(secret.Data["expired_at"])))
+	if err != nil {
+		ts = time.Now().Add(DefaultExpiredAt)
+	}
+	aksk := &types.AKSK{
+		AK:            string(secret.Data["ak"]),
+		SK:            string(secret.Data["sk"]),
+		Cipher:        string(secret.Data["cipher"]),
+		ExpiredAt:     ts,
+		SecurityToken: string(secret.Data["securityToken"]),
+	}
+	return aksk, nil
+}
+
+func GetAkskConfigMap(akskName, akskNameSpace string, clientset *kubernetes.Clientset) (*types.AKSK, error) {
+	configMap, err := clientset.CoreV1().ConfigMaps(akskNameSpace).Get(context.TODO(), akskName, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("get aksk configMap %s error: %v", akskName, err)
+	}
+	ts, err := time.Parse(TimeLayoutStr, strings.TrimSpace(configMap.Data["expired_at"]))
+	if err != nil {
+		ts = time.Now().Add(DefaultExpiredAt)
+	}
+	aksk := &types.AKSK{
+		AK:            configMap.Data["ak"],
+		SK:            configMap.Data["sk"],
+		Cipher:        configMap.Data["cipher"],
+		ExpiredAt:     ts,
+		SecurityToken: configMap.Data["securityToken"],
+	}
 	return aksk, nil
 }
 
@@ -140,7 +184,7 @@ func ParseAkskFile(filePath string) (*types.AKSK, error) {
 	}
 
 	if _, ok := akskMap["expired_at"]; ok {
-		ts, err := time.Parse(timeLayoutStr, akskMap["expired_at"])
+		ts, err := time.Parse(TimeLayoutStr, akskMap["expired_at"])
 		if err != nil {
 			return nil, err
 		}
