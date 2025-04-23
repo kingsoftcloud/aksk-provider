@@ -67,6 +67,12 @@ func (pvd *EnvAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
 		if err != nil {
 			return nil, err
 		}
+		if aksk.SecurityToken != "" {
+			aksk.SecurityToken, err = utils.DecryptData(aksk.SecurityToken, pvd.CipherKey, aksk.Cipher)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	aksk.ExpiredAt = time.Now().Add(utils.DefaultExpiredAt)

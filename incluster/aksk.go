@@ -184,6 +184,12 @@ func (pvd *AKSKProvider) loadAkskInConfigMap() error {
 		if err != nil {
 			return err
 		}
+		if aksk.SecurityToken != "" {
+			aksk.SecurityToken, err = utils.DecryptData(aksk.SecurityToken, pvd.CipherKey, aksk.Cipher)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	pvd.AkskMap.Store("aksk", aksk)
 	go pvd.watchAkskConfigMap(pvd.AkskCMName, pvd.AkskCMNameSpace)
@@ -201,6 +207,12 @@ func (pvd *AKSKProvider) loadAkskInSecret() error {
 		aksk.SK, err = utils.DecryptData(aksk.SK, pvd.CipherKey, aksk.Cipher)
 		if err != nil {
 			return err
+		}
+		if aksk.SecurityToken != "" {
+			aksk.SecurityToken, err = utils.DecryptData(aksk.SecurityToken, pvd.CipherKey, aksk.Cipher)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	pvd.AkskMap.Store("aksk", aksk)
@@ -260,12 +272,20 @@ func (pvd *AKSKProvider) loadConfigMap(cm *v1.ConfigMap) {
 	securityToken := cm.Data["securityToken"]
 	cipher := cm.Data["cipher"]
 	decryptedSk := noDecryptSk
+	deSecurityToken := securityToken
 	if cipher != "none" && cipher != "" {
 		var err error
 		decryptedSk, err = utils.DecryptData(noDecryptSk, pvd.CipherKey, cipher)
 		if err != nil {
 			klog.Errorf("Failed to decrypt SK: %v", err)
 			return
+		}
+		if deSecurityToken != "" {
+			deSecurityToken, err = utils.DecryptData(securityToken, pvd.CipherKey, cipher)
+			if err != nil {
+				klog.Errorf("Failed to decrypt token: %v", err)
+				return
+			}
 		}
 	}
 	ts, err := time.Parse(utils.TimeLayoutStr, strings.TrimSpace(cm.Data["expired_at"]))
@@ -277,7 +297,7 @@ func (pvd *AKSKProvider) loadConfigMap(cm *v1.ConfigMap) {
 		SK:            decryptedSk,
 		Cipher:        cipher,
 		ExpiredAt:     ts,
-		SecurityToken: securityToken,
+		SecurityToken: deSecurityToken,
 	}
 	pvd.AkskMap.Store("aksk", aksk)
 	klog.Infof("ak:%s updated", aksk.AK)
@@ -289,12 +309,20 @@ func (pvd *AKSKProvider) loadSecret(secret *v1.Secret) {
 	securityToken := string(secret.Data["securityToken"])
 	cipher := string(secret.Data["cipher"])
 	decryptedSk := noDecryptSk
+	deSecurityToken := securityToken
 	if cipher != "none" && cipher != "" {
 		var err error
 		decryptedSk, err = utils.DecryptData(noDecryptSk, pvd.CipherKey, cipher)
 		if err != nil {
 			klog.Errorf("Failed to decrypt SK: %v", err)
 			return
+		}
+		if deSecurityToken != "" {
+			deSecurityToken, err = utils.DecryptData(securityToken, pvd.CipherKey, cipher)
+			if err != nil {
+				klog.Errorf("Failed to decrypt token: %v", err)
+				return
+			}
 		}
 	}
 	ts, err := time.Parse(utils.TimeLayoutStr, strings.TrimSpace(string(secret.Data["expired_at"])))
@@ -306,7 +334,7 @@ func (pvd *AKSKProvider) loadSecret(secret *v1.Secret) {
 		SK:            decryptedSk,
 		Cipher:        cipher,
 		ExpiredAt:     ts,
-		SecurityToken: securityToken,
+		SecurityToken: deSecurityToken,
 	}
 	pvd.AkskMap.Store("aksk", aksk)
 	klog.Infof("ak:%s updated", aksk.AK)
