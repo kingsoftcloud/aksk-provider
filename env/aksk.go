@@ -2,6 +2,7 @@ package env
 
 import (
 	"fmt"
+	"k8s.io/klog/v2"
 	"os"
 	"sync"
 	"time"
@@ -68,9 +69,14 @@ func (pvd *EnvAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
 			return nil, err
 		}
 		if aksk.SecurityToken != "" {
-			aksk.SecurityToken, err = utils.DecryptData(aksk.SecurityToken, pvd.CipherKey, aksk.Cipher)
-			if err != nil {
-				return nil, err
+			// Check if there is a rule to skip decryption
+			if utils.ShouldSkipDecrypt("securityToken", aksk.Cipher) {
+				klog.Infof("Skip decryption for SecurityToken with cipher: %s", aksk.Cipher)
+			} else {
+				aksk.SecurityToken, err = utils.DecryptData(aksk.SecurityToken, pvd.CipherKey, aksk.Cipher)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}

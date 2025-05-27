@@ -20,6 +20,13 @@ const (
 	DefaultExpiredAt = 100 * 365 * 24 * time.Hour
 )
 
+// GlobalSkipDecryptRules defines a global set of rules specifying fields that should skip decryption.
+// If a field matches one of these rules, and its cipher matches the specified algorithm,
+// the system will skip the decryption step for that field.
+var GlobalSkipDecryptRules = map[string]string{
+	"securityToken": "RSA", // Do not decrypt SecurityToken if the cipher is RSA
+}
+
 func createEncryptorConfig(key string, cipher string) (*utils.EncryptorConfig, error) {
 	cipher = strings.ToUpper(cipher)
 	switch cipher {
@@ -196,4 +203,9 @@ func ParseAkskFile(filePath string) (*types.AKSK, error) {
 	}
 
 	return aksk, nil
+}
+
+func ShouldSkipDecrypt(field, cipher string) bool {
+	algo, ok := GlobalSkipDecryptRules[field]
+	return ok && algo == cipher
 }

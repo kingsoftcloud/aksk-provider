@@ -64,9 +64,14 @@ func (pvd *FileAKSKProvider) ReloadAKSK() (*types.AKSK, error) {
 	}
 
 	if aksk.SecurityToken != "" {
-		aksk.SecurityToken, err = utils.DecryptData(aksk.SecurityToken, pvd.CipherKey, aksk.Cipher)
-		if err != nil {
-			return nil, err
+		// Check if there is a rule to skip decryption
+		if utils.ShouldSkipDecrypt("securityToken", aksk.Cipher) {
+			klog.Infof("Skip decryption for SecurityToken with cipher: %s", aksk.Cipher)
+		} else {
+			aksk.SecurityToken, err = utils.DecryptData(aksk.SecurityToken, pvd.CipherKey, aksk.Cipher)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

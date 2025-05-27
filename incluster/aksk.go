@@ -185,9 +185,14 @@ func (pvd *AKSKProvider) loadAkskInConfigMap() error {
 			return err
 		}
 		if aksk.SecurityToken != "" {
-			aksk.SecurityToken, err = utils.DecryptData(aksk.SecurityToken, pvd.CipherKey, aksk.Cipher)
-			if err != nil {
-				return err
+			// Check if there is a rule to skip decryption
+			if utils.ShouldSkipDecrypt("securityToken", aksk.Cipher) {
+				klog.Infof("Skip decryption for SecurityToken with cipher: %s", aksk.Cipher)
+			} else {
+				aksk.SecurityToken, err = utils.DecryptData(aksk.SecurityToken, pvd.CipherKey, aksk.Cipher)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -209,9 +214,14 @@ func (pvd *AKSKProvider) loadAkskInSecret() error {
 			return err
 		}
 		if aksk.SecurityToken != "" {
-			aksk.SecurityToken, err = utils.DecryptData(aksk.SecurityToken, pvd.CipherKey, aksk.Cipher)
-			if err != nil {
-				return err
+			// Check if there is a rule to skip decryption
+			if utils.ShouldSkipDecrypt("securityToken", aksk.Cipher) {
+				klog.Infof("Skip decryption for SecurityToken with cipher: %s", aksk.Cipher)
+			} else {
+				aksk.SecurityToken, err = utils.DecryptData(aksk.SecurityToken, pvd.CipherKey, aksk.Cipher)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -281,10 +291,15 @@ func (pvd *AKSKProvider) loadConfigMap(cm *v1.ConfigMap) {
 			return
 		}
 		if deSecurityToken != "" {
-			deSecurityToken, err = utils.DecryptData(securityToken, pvd.CipherKey, cipher)
-			if err != nil {
-				klog.Errorf("Failed to decrypt token: %v", err)
-				return
+			// Check if there is a rule to skip decryption
+			if utils.ShouldSkipDecrypt("securityToken", cipher) {
+				klog.Infof("Skip decryption for SecurityToken with cipher: %s", cipher)
+			} else {
+				deSecurityToken, err = utils.DecryptData(securityToken, pvd.CipherKey, cipher)
+				if err != nil {
+					klog.Errorf("Failed to decrypt token: %v", err)
+					return
+				}
 			}
 		}
 	}
@@ -318,10 +333,15 @@ func (pvd *AKSKProvider) loadSecret(secret *v1.Secret) {
 			return
 		}
 		if deSecurityToken != "" {
-			deSecurityToken, err = utils.DecryptData(securityToken, pvd.CipherKey, cipher)
-			if err != nil {
-				klog.Errorf("Failed to decrypt token: %v", err)
-				return
+			// Check if there is a rule to skip decryption
+			if utils.ShouldSkipDecrypt("securityToken", cipher) {
+				klog.Infof("Skip decryption for SecurityToken with cipher: %s", cipher)
+			} else {
+				deSecurityToken, err = utils.DecryptData(securityToken, pvd.CipherKey, cipher)
+				if err != nil {
+					klog.Errorf("Failed to decrypt token: %v", err)
+					return
+				}
 			}
 		}
 	}
